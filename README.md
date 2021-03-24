@@ -4,18 +4,26 @@ Anchor links and scroll-to utilities for React Native (+ Web)
 
 ## Installation
 
+> Coming soon 😇
+
 ```sh
-npm install @nandorojo/anchor
+yarn add @nandorojo/anchor
 ```
 
 ## Usage
 
-```js
-import Anchor from "@nandorojo/anchor";
+```jsx
+import { Anchor, Target, ScrollView } from '@nandorojo/anchor';
 
 // ...
 
-const result = await Anchor.multiply(3, 7);
+return (
+  <ScrollView>
+    <Anchor target="bottom-content">Scroll to bottom content</Anchor>
+    <SomeContent />
+    <Target name="bottom-content">Bottom content!</Target>
+  </ScrollView>
+);
 ```
 
 ## Contributing
