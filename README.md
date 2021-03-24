@@ -1,4 +1,4 @@
-# @nandorojo/anchor
+# React Native Anchor 🦅
 
 Anchor links and scroll-to utilities for React Native (+ Web)
 
