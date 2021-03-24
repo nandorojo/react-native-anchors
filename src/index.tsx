@@ -102,6 +102,10 @@ type ScrollToOptions = {
 
 export interface Anchors {}
 
+export type AnchorsRef = {
+  scrollTo: (name: string, options: ScrollToOptions) => void;
+};
+
 // @ts-expect-error
 type Anchor = Anchors['anchor'] extends string ? Anchors['anchor'] : string;
 
@@ -185,7 +189,7 @@ function useScrollTo() {
         >((resolve) => {
           const node =
             scrollRef.current && findNodeHandle(scrollRef.current as any);
-          if (!node || !scrollRef.current) {
+          if (!node) {
             return resolve({
               success: false,
               message: 'Scroll ref does not exist. Will not scroll to view.',
@@ -213,7 +217,6 @@ function useScrollTo() {
                 let scrollTo = horizontal ? scrollX : scrollY;
                 scrollTo += offset;
                 scrollTo = Math.max(scrollTo, 0);
-
                 const key = horizontal ? 'x' : 'y';
 
                 if ('scrollTo' in scrollable) {

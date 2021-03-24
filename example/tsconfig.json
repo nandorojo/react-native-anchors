@@ -2,15 +2,17 @@
   "compilerOptions": {
     "jsx": "react-native",
     "target": "esnext",
-    "lib": [
-      "esnext"
-    ],
+    "lib": ["esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "paths": {
+      "@nandorojo/anchors": ["../../src/index"]
+    },
+    "baseUrl": "./"
   }
 }
