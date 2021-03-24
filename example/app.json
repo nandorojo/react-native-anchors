@@ -1,0 +1,22 @@
+{
+  "name": "@nandorojo/anchor-example",
+  "displayName": "Anchor Example",
+  "expo": {
+    "name": "@nandorojo/anchor-example",
+    "slug": "nandorojo-anchor-example",
+    "description": "Example app for @nandorojo/anchor",
+    "privacy": "public",
+    "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
