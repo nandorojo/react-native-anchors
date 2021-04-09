@@ -18,25 +18,32 @@ This is the simplest usage:
 
 ```jsx
 import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor'
+import { View, Text } from 'react-native'
 
 export default function App() {
   return (
     <ScrollView>
-      <ScrollTo target="bottom-content">Scroll to bottom content</ScrollTo>
+      <ScrollTo target="bottom-content">
+        <Text>Scroll to bottom content</Text>
+      </ScrollTo>
       <View style={{ height: 1000 }} />
-      <Target name="bottom-content">Bottom content!</Target>
+      <Target name="bottom-content">
+        <View style={{ height: 100, backgroundColor: 'blue' }} />
+      </Target>
     </ScrollView>
   )
 }
 ```
 
-The library exports a `ScrollView` and `FlatList` component you can use.
+The library exports a `ScrollView` and `FlatList` component you can use as drop-in replacements for the react-native ones.
+
+Note that the scroll to will only work if you use this library's scrollable components, or if you use a custom scrollable with the `AnchorProvider`, as shown in the example below.
 
 ### Use custom scrollables
 
 If you want to use your own scrollable, that's fine. You'll just have to do 2 things:
 
-1. Wrap them in the `AnchorProvider`
+1. Wrap them with the `AnchorProvider`
 2. Register the scrollable with `useRegisterScroller`
 
 That's all the exported `ScrollView` does for you.
@@ -65,7 +72,7 @@ function MyComponent() {
 }
 ```
 
-If you need `horizontal` scrolling, make sure you pass `horizontal` to the `AnchorProvider`, and the `ScrollView`.
+If you need `horizontal` scrolling, make sure you pass the `horizontal` prop to both the `AnchorProvider`, and the `ScrollView`.
 
 ```tsx
 import { AnchorProvider, useRegisterScrollable } from '@nandorojo/anchor'
@@ -134,7 +141,7 @@ export default function App() {
 }
 ```
 
-### `useScrollTo(target, options?)`
+### Create a custom `scrollTo` component
 
 If you don't want to use the `ScrollTo` component, you can also rely on the `useScrollTo` with a custom pressable.
 
@@ -269,6 +276,89 @@ const Trigger = () => (
 - `options` optional dictionary
   - `animated = true` whether the scroll should animate or not
   - `offset = -10` a number in pixels to offset the scroll by. By default, it scrolls 10 pixels above the content.
+
+### `Target`
+
+```js
+const ContentToScrollTo = () => <Target name="bottom-content" />
+```
+
+### `useScrollTo`
+
+A react hook that returns a `scrollTo(name, options?)` function. This serves as an alternative to the [`ScrollTo`](#ScrollTo) component.
+
+The first argument is required. It's a string that corresponds to your target's unique `name` prop.
+
+The second argument is an optional `options` object, which is identical to the [`ScrollTo`](#ScrollTo) component's `options` prop.
+ 
+```jsx
+import { ScrollView, Target } from '@nandorojo/anchor'
+import { Text, View } from 'react-native'
+
+function CustomScrollTo() {
+  const { scrollTo } = useScrollTo()
+
+  const onPress = () => {
+    scrollTo('scrollhere') // required: target name
+
+    // you can also pass these optional parameters:
+    scrollTo('scrollhere', {
+      animated: true, // default true
+      offset: -10 // offset to scroll to, default -10 pts
+    })
+  }
+
+  return <Text onPress={onPress}>Scroll down</Text>
+}
+
+export default function App() {
+  return (
+    <ScrollView>
+      <CustomScrollTo />
+      <View style={{ height: 500 }} />
+      <Target name="scrollhere">
+        <YourComponent />
+      </Target>
+    </ScrollView>
+  )
+} 
+```
+
+### `useRegisterScroller`
+
+A hook that returns a `register` function. This is an alternative option to using the `ScrollView` or `FlatList` components provided by this library.
+
+Note that, to use this, you must first wrap the scrollable with `AnchorProvider`. It's probably easier to just use the exported `ScrollView`, but it's your call.
+
+
+```tsx
+import { AnchorProvider, useRegisterScrollable } from '@nandorojo/anchor'
+import { ScrollView } from 'react-native'
+
+// make sure this is the child of AnchorProvider
+function MyComponent() {
+  const { register } = useRegisterScroller()
+
+  return (
+    <ScrollView ref={register}>
+      <YourContentHere />
+    </ScrollView>
+  )
+}
+
+export default function Provider() {
+  return (
+    <AnchorProvider>
+      <MyComponent />
+    </AnchorProvider>
+  )
+}
+```
+
+#### Props
+
+- `name` required, unique string that identifies this View to scroll to
+  - it only needs to be unique _within_ a given ScrollView. You can reuse names for different scrollables, but I'd avoid doing that.
 
 ## Contributing
 
