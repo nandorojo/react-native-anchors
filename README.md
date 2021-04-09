@@ -36,8 +36,10 @@ export default function App() {
     </View>
   );
 }
-
 ```
+
+- [Expo Snack example](https://snack.expo.io/@nandorojo/anxious-chip) (iOS and Android only, since Expo Snack uses an outdated react-native-web version)
+- [CodeSandbox example](https://codesandbox.io/s/empty-sky-8nhnb?file=/src/App.js) (web) 
 
 The library exports a `ScrollView` and `FlatList` component you can use as drop-in replacements for the react-native ones.
 
