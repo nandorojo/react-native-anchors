@@ -283,6 +283,11 @@ const Trigger = () => (
 const ContentToScrollTo = () => <Target name="bottom-content" />
 ```
 
+#### Props
+
+- `name` required, unique string that identifies this View to scroll to
+  - it only needs to be unique _within_ a given ScrollView. You can reuse names for different scrollables, but I'd avoid doing that.
+
 ### `useScrollTo`
 
 A react hook that returns a `scrollTo(name, options?)` function. This serves as an alternative to the [`ScrollTo`](#ScrollTo) component.
@@ -354,11 +359,6 @@ export default function Provider() {
   )
 }
 ```
-
-#### Props
-
-- `name` required, unique string that identifies this View to scroll to
-  - it only needs to be unique _within_ a given ScrollView. You can reuse names for different scrollables, but I'd avoid doing that.
 
 ## Contributing
 
