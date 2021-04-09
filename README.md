@@ -17,17 +17,16 @@ If you're using react-native-web, you'll need at least version 0.15.3.
 This is the simplest usage:
 
 ```jsx
-import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor';
+import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor'
 
-
-function App() {
-return (
-  <ScrollView>
-    <ScrollTo target="bottom-content">Scroll to bottom content</Anchor>
-    <SomeContent />
-    <Target name="bottom-content">Bottom content!</Target>
-  </ScrollView>
-);
+export default function App() {
+  return (
+    <ScrollView>
+      <ScrollTo target="bottom-content">Scroll to bottom content</ScrollTo>
+      <View style={{ height: 100 }} />
+      <Target name="bottom-content">Bottom content!</Target>
+    </ScrollView>
+  )
 }
 ```
 
@@ -70,7 +69,7 @@ function MyComponent() {
 
 There are a few options for triggering a scroll-to event. The basic premise is the same as HTML anchor links. You need 1) a target to scroll to, and 2) something to trigger the scroll.
 
-The simplest way to make a target is to use the `Target` component. 
+The simplest way to make a target is to use the `Target` component.
 
 Each target needs a **unique** `name` prop. The name indicates where to scroll.
 
