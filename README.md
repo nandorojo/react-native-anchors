@@ -23,7 +23,7 @@ export default function App() {
   return (
     <ScrollView>
       <ScrollTo target="bottom-content">Scroll to bottom content</ScrollTo>
-      <View style={{ height: 100 }} />
+      <View style={{ height: 1000 }} />
       <Target name="bottom-content">Bottom content!</Target>
     </ScrollView>
   )
@@ -59,6 +59,32 @@ function MyComponent() {
 
   return (
     <ScrollView ref={register}>
+      <YourContentHere />
+    </ScrollView>
+  )
+}
+```
+
+If you need `horizontal` scrolling, make sure you pass `horizontal` to the `AnchorProvider`, and the `ScrollView`.
+
+```tsx
+import { AnchorProvider, useRegisterScrollable } from '@nandorojo/anchor'
+import { ScrollView } from 'react-native'
+
+export default function Provider() {
+  return (
+    <AnchorProvider horizontal>
+      <MyComponent />
+    </AnchorProvider>
+  )
+}
+
+// make sure this is the child of AnchorProvider
+function MyComponent() {
+  const { register } = useRegisterScroller()
+
+  return (
+    <ScrollView horizontal ref={register}>
       <YourContentHere />
     </ScrollView>
   )
@@ -222,6 +248,27 @@ import {
   useRegisterScroller
 } from '@nandorojo/anchor'
 ```
+
+### `ScrollTo`
+
+```jsx
+const Trigger = () => (
+  <ScrollTo
+    target="bottom"
+    options={{
+      animated: true,
+      offset: -10
+    }}
+  />
+)
+```
+
+#### Props
+
+- `target` **required** unique string indicating the `name` of the `Target` to scroll to
+- `options` optional dictionary
+  - `animated = true` whether the scroll should animate or not
+  - `offset = -10` a number in pixels to offset the scroll by. By default, it scrolls 10 pixels above the content.
 
 ## Contributing
 
