@@ -17,22 +17,26 @@ If you're using react-native-web, you'll need at least version 0.15.3.
 This is the simplest usage:
 
 ```jsx
-import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor'
-import { View, Text } from 'react-native'
+import React from 'react';
+import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor';
+import { View, Text } from 'react-native';
 
 export default function App() {
   return (
-    <ScrollView>
-      <ScrollTo target="bottom-content">
-        <Text>Scroll to bottom content</Text>
-      </ScrollTo>
-      <View style={{ height: 1000 }} />
-      <Target name="bottom-content">
-        <View style={{ height: 100, backgroundColor: 'blue' }} />
-      </Target>
-    </ScrollView>
-  )
+    <View style={{ flex: 1 }}>
+      <ScrollView>
+        <ScrollTo target="bottom-content">
+          <Text>Scroll to bottom content</Text>
+        </ScrollTo>
+        <View style={{ height: 1000 }} />
+        <Target name="bottom-content">
+          <View style={{ height: 100, backgroundColor: 'blue' }} />
+        </Target>
+      </ScrollView>
+    </View>
+  );
 }
+
 ```
 
 The library exports a `ScrollView` and `FlatList` component you can use as drop-in replacements for the react-native ones.
