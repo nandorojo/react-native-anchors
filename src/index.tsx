@@ -17,7 +17,14 @@ import type {
   RefCallback,
 } from 'react';
 
-const { createContext, forwardRef, useContext, useMemo, useRef } = React;
+const {
+  createContext,
+  forwardRef,
+  useContext,
+  useMemo,
+  useRef,
+  useImperativeHandle,
+} = React;
 
 // from react-merge-refs (avoid dependency)
 function mergeRefs<T = any>(
@@ -103,7 +110,38 @@ type ScrollToOptions = {
 export interface Anchors {}
 
 export type AnchorsRef = {
-  scrollTo: (name: string, options: ScrollToOptions) => void;
+  scrollTo: (
+    name: Anchor,
+    options?: ScrollToOptions
+  ) => Promise<{ success: true } | { success: false; message: string }>;
+};
+
+/**
+ * If you need to control a `ScrollView` or `FlatList` from outside of their scope:
+ *
+ * ```jsx
+ * import React from 'react'
+ * import { useAnchors, ScrollView } from '@nandorojo/anchor'
+ *
+ * export default function App() {
+ *  const anchors = useAnchors()
+ *
+ *  const onPress = () => {
+ *    anchors.current?.scrollTo('list')
+ *  }
+ *
+ *  return (
+ *    <ScrollView anchors={anchors}>
+ *      <Target name="list" />
+ *    </ScrollView>
+ *  )
+ * }
+ * ```
+ */
+const useAnchors = () => {
+  const ref = useRef<AnchorsRef>(null);
+
+  return ref;
 };
 
 // @ts-expect-error
@@ -116,6 +154,7 @@ type AnchorsContext = {
   registerTargetRef: (name: Anchor, ref: View | Text) => void;
   registerScrollRef: (ref: ScrollableWrapper | null) => void;
   horizontal: ComponentProps<typeof NativeScrollView>['horizontal'];
+  scrollTo: AnchorsRef['scrollTo'];
 };
 
 const AnchorsContext = createContext<AnchorsContext>({
@@ -132,6 +171,14 @@ const AnchorsContext = createContext<AnchorsContext>({
     // no-op
   },
   horizontal: false,
+  scrollTo: () => {
+    return new Promise((resolve) =>
+      resolve({
+        success: false,
+        message: 'Missing @nandorojo/anchor provider.',
+      })
+    );
+  },
 });
 
 const useAnchorsContext = () => useContext(AnchorsContext);
@@ -158,28 +205,6 @@ const useCreateAnchorsContext = ({
         }
       },
       horizontal,
-    };
-  }, [horizontal]);
-};
-
-function useRegisterTarget() {
-  const { registerTargetRef } = useAnchorsContext();
-
-  return useMemo(
-    () => ({
-      register: (name: Anchor) => {
-        return (ref: View) => registerTargetRef(name, ref);
-      },
-    }),
-    [registerTargetRef]
-  );
-}
-
-function useScrollTo() {
-  const { targetRefs, scrollRef, horizontal } = useAnchorsContext();
-
-  return useMemo(
-    () => ({
       scrollTo: (
         name: Anchor,
         { animated = true, offset = -10 }: ScrollToOptions = {}
@@ -211,7 +236,7 @@ function useScrollTo() {
                 const scrollY = top;
                 const scrollX = left;
                 const scrollable = getScrollableNode(
-                  scrollRef
+                  scrollRef as RefObject<ScrollableWrapper>
                 ) as ScrollableWrapper;
 
                 let scrollTo = horizontal ? scrollX : scrollY;
@@ -247,8 +272,98 @@ function useScrollTo() {
           );
         });
       },
+    };
+  }, [horizontal]);
+};
+
+function useRegisterTarget() {
+  const { registerTargetRef } = useAnchorsContext();
+
+  return useMemo(
+    () => ({
+      register: (name: Anchor) => {
+        return (ref: View) => registerTargetRef(name, ref);
+      },
     }),
-    [horizontal, scrollRef, targetRefs]
+    [registerTargetRef]
+  );
+}
+
+function useScrollTo() {
+  const { scrollTo } = useAnchorsContext();
+
+  return useMemo(
+    () => ({
+      scrollTo,
+      // scrollTo: (
+      //   name: Anchor,
+      //   { animated = true, offset = -10 }: ScrollToOptions = {}
+      // ) => {
+      //   return new Promise<
+      //     { success: true } | { success: false; message: string }
+      //   >((resolve) => {
+      //     const node =
+      //       scrollRef.current && findNodeHandle(scrollRef.current as any);
+      //     if (!node) {
+      //       return resolve({
+      //         success: false,
+      //         message: 'Scroll ref does not exist. Will not scroll to view.',
+      //       });
+      //     }
+      //     if (!targetRefs.current?.[name]) {
+      //       resolve({
+      //         success: false,
+      //         message:
+      //           'Anchor ref ' +
+      //           name +
+      //           ' does not exist. It will not scroll. Please make sure to use the ScrollView provided by @nandorojo/anchors, or use the registerScrollRef function for your own ScrollView.',
+      //       });
+      //     }
+      //     targetRefs.current?.[name].measureLayout(
+      //       node,
+      //       (left, top) => {
+      //         requestAnimationFrame(() => {
+      //           const scrollY = top;
+      //           const scrollX = left;
+      //           const scrollable = getScrollableNode(
+      //             scrollRef
+      //           ) as ScrollableWrapper;
+
+      //           let scrollTo = horizontal ? scrollX : scrollY;
+      //           scrollTo += offset;
+      //           scrollTo = Math.max(scrollTo, 0);
+      //           const key = horizontal ? 'x' : 'y';
+
+      //           if ('scrollTo' in scrollable) {
+      //             scrollable.scrollTo({
+      //               [key]: scrollTo,
+      //               animated,
+      //             });
+      //           } else if ('scrollToOffset' in scrollable) {
+      //             scrollable.scrollToOffset({
+      //               offset: scrollTo,
+      //               animated,
+      //             });
+      //           } else if ('scrollResponderScrollTo' in scrollable) {
+      //             scrollable.scrollResponderScrollTo({
+      //               [key]: scrollTo,
+      //               animated,
+      //             });
+      //           }
+      //           resolve({ success: true });
+      //         });
+      //       },
+      //       () => {
+      //         resolve({
+      //           success: false,
+      //           message: 'Failed to measure target node.',
+      //         });
+      //       }
+      //     );
+      //   });
+      // },
+    }),
+    [scrollTo]
   );
 }
 
@@ -261,8 +376,18 @@ function useRegisterScroller() {
 function AnchorProvider({
   children,
   horizontal,
-}: { children: ReactNode } & Pick<AnchorsContext, 'horizontal'>) {
+  anchors,
+}: { children: ReactNode; anchors?: RefObject<AnchorsRef> } & Pick<
+  AnchorsContext,
+  'horizontal'
+>) {
   const value = useCreateAnchorsContext({ horizontal });
+
+  useImperativeHandle(anchors, () => ({
+    scrollTo: (...props) => {
+      return value.scrollTo(...props);
+    },
+  }));
 
   return (
     <AnchorsContext.Provider value={value}>{children}</AnchorsContext.Provider>
@@ -278,10 +403,10 @@ const ScrollView = forwardRef<
   NativeScrollView,
   ComponentProps<typeof NativeScrollView> & {
     children?: ReactNode;
-  }
->(function ScrollView({ horizontal = false, ...props }, ref) {
+  } & Pick<ComponentProps<typeof AnchorProvider>, 'anchors'>
+>(function ScrollView({ horizontal = false, anchors, ...props }, ref) {
   return (
-    <AnchorProvider horizontal={horizontal}>
+    <AnchorProvider anchors={anchors} horizontal={horizontal}>
       <AnchorsContext.Consumer>
         {({ registerScrollRef }) => (
           <NativeScrollView
@@ -305,10 +430,14 @@ const ScrollView = forwardRef<
 function FlatList<T = any>({
   flatListRef,
   horizontal = false,
+  anchors,
   ...props
-}: FlatListProps<T> & { flatListRef?: RefObject<NativeFlatList> }) {
+}: FlatListProps<T> & { flatListRef?: RefObject<NativeFlatList> } & Pick<
+    ComponentProps<typeof AnchorProvider>,
+    'anchors'
+  >) {
   return (
-    <AnchorProvider horizontal={horizontal}>
+    <AnchorProvider anchors={anchors} horizontal={horizontal}>
       <AnchorsContext.Consumer>
         {({ registerScrollRef }) => (
           <NativeFlatList
@@ -368,5 +497,6 @@ export {
   Target,
   ScrollTo as Anchor,
   useRegisterScroller,
+  useAnchors,
 };
 // }
