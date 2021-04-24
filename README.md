@@ -217,6 +217,22 @@ return (
 
 This works with web (react-native-web 0.15.3 or higher).
 
+To support iOS browsers, you should polyfill the smooth scroll API.
+
+```sh
+yarn add smoothscroll-polyfill
+```
+
+Then at the root of your app (`App.js`, or `pages/_app.js` for Next.js) call this:
+
+```jsx
+import { Platform } from 'react-native'
+
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  require('smoothscroll-polyfill').polyfill()
+}
+```
+
 One thing to keep in mind: the parent view of a `ScrollView` on web **must** have a fixed height. Otherwise, the `ScrollView` will just use window scrolling. This is a common source of confusion on web, and it took me a while to learn.
 
 Typically, it's solved by doing this:
