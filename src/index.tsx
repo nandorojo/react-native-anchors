@@ -442,6 +442,7 @@ function FlatList<T = any>({
         {({ registerScrollRef }) => (
           <NativeFlatList
             {...props}
+            horizontal={horizontal}
             ref={mergeRefs([registerScrollRef, flatListRef || null])}
           />
         )}
