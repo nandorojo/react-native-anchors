@@ -1,6 +1,6 @@
 {
   "name": "@nandorojo/anchor",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "🦅 Anchor links and scroll-to utilities for React Native (+ Web).",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
