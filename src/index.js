@@ -274,7 +274,7 @@ const ScrollView = forwardRef(function ScrollView({ horizontal = false, anchors,
  */
 function FlatList({ flatListRef, horizontal = false, anchors, ...props }) {
     return (React.createElement(AnchorProvider, { anchors: anchors, horizontal: horizontal },
-        React.createElement(AnchorsContext.Consumer, null, ({ registerScrollRef }) => (React.createElement(NativeFlatList, Object.assign({}, props, { ref: mergeRefs([registerScrollRef, flatListRef || null]) }))))));
+        React.createElement(AnchorsContext.Consumer, null, ({ registerScrollRef }) => (React.createElement(NativeFlatList, Object.assign({}, props, { horizontal: horizontal, ref: mergeRefs([registerScrollRef, flatListRef || null]) }))))));
 }
 function ScrollTo({ target, onPress, options, onRequestScrollTo, ...props }) {
     const { scrollTo } = useScrollTo();
