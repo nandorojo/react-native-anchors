@@ -4,8 +4,6 @@ Anchor links and scroll-to utilities for React Native (+ Web)
 
 ## Installation
 
-> Coming soon 😇
-
 ```sh
 yarn add @nandorojo/anchor
 ```
