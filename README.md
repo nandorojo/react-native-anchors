@@ -408,7 +408,7 @@ function getRecursiveName(object?: object): string {
   return currentKey + '.' + getRecursiveName(object[currentKey])
 }
 
-export function ScrollToField({ name, triggerFocus }: { name: string; triggerFocus?: () => void }) {
+export function ScrollToField({ name }: { name: string }) {
   const { submitCount, errors } = useFormikContext()
 
   const { scrollTo } = useScrollTo()
