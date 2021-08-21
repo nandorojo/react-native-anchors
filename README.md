@@ -17,9 +17,9 @@ This works great to scroll to errors in Formik forms. See the [`ScrollToField` c
 This is the simplest usage:
 
 ```jsx
-import React from 'react';
-import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor';
-import { View, Text } from 'react-native';
+import React from 'react'
+import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor'
+import { View, Text } from 'react-native'
 
 export default function App() {
   return (
@@ -34,12 +34,12 @@ export default function App() {
         </Target>
       </ScrollView>
     </View>
-  );
+  )
 }
 ```
 
 - [Expo Snack example](https://snack.expo.io/@nandorojo/anxious-chip) (iOS and Android only, since Expo Snack uses an outdated react-native-web version)
-- [CodeSandbox example](https://codesandbox.io/s/empty-sky-8nhnb?file=/src/App.js) (web) 
+- [CodeSandbox example](https://codesandbox.io/s/empty-sky-8nhnb?file=/src/App.js) (web)
 
 The library exports a `ScrollView` and `FlatList` component you can use as drop-in replacements for the react-native ones.
 
@@ -317,7 +317,7 @@ A react hook that returns a `scrollTo(name, options?)` function. This serves as 
 The first argument is required. It's a string that corresponds to your target's unique `name` prop.
 
 The second argument is an optional `options` object, which is identical to the [`ScrollTo`](#ScrollTo) component's `options` prop.
- 
+
 ```jsx
 import { ScrollView, Target } from '@nandorojo/anchor'
 import { Text, View } from 'react-native'
@@ -348,7 +348,7 @@ export default function App() {
       </Target>
     </ScrollView>
   )
-} 
+}
 ```
 
 ### `useRegisterScroller`
@@ -356,7 +356,6 @@ export default function App() {
 A hook that returns a `register` function. This is an alternative option to using the `ScrollView` or `FlatList` components provided by this library.
 
 Note that, to use this, you must first wrap the scrollable with `AnchorProvider`. It's probably easier to just use the exported `ScrollView`, but it's your call.
-
 
 ```tsx
 import { AnchorProvider, useRegisterScrollable } from '@nandorojo/anchor'
@@ -409,13 +408,7 @@ function getRecursiveName(object?: object): string {
   return currentKey + '.' + getRecursiveName(object[currentKey])
 }
 
-export function ScrollToField({
-  name,
-  triggerFocus,
-}: {
-  name: string
-  triggerFocus?: () => void
-}) {
+export function ScrollToField({ name, triggerFocus }: { name: string; triggerFocus?: () => void }) {
   const { submitCount, errors } = useFormikContext()
 
   const { scrollTo } = useScrollTo()
@@ -428,9 +421,7 @@ export function ScrollToField({
 
       if (submitCount > previousSubmitCount.current && name) {
         if (name === errorPath) {
-          scrollTo(name).then((didScroll) =>
-            console.log('[scroll-to-field] did scroll', name, didScroll)
-          )
+          scrollTo(name).then((didScroll) => console.log('[scroll-to-field] did scroll', name, didScroll))
         }
       }
       previousSubmitCount.current = submitCount
@@ -439,6 +430,21 @@ export function ScrollToField({
   )
 
   return <Target name={name} />
+}
+```
+
+2. Add it alongside your field:
+
+```tsx
+const InputField = ({ name }) => {
+  const [{ value }] = useField(name)
+
+  return (
+    <View>
+      <ScrollToField name={name} />
+      <TextInput value={value} />
+    </View>
+  )
 }
 ```
 
