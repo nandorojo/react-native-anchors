@@ -10,6 +10,8 @@ yarn add @nandorojo/anchor
 
 If you're using react-native-web, you'll need at least version 0.15.3.
 
+This works great to scroll to errors in Formik forms. See the [`ScrollToField` component](#formik-error-usage).
+
 ## Usage
 
 This is the simplest usage:
@@ -377,6 +379,66 @@ export default function Provider() {
       <MyComponent />
     </AnchorProvider>
   )
+}
+```
+
+## Formik Error Usage
+
+1. Create a `ScrollToField` component:
+
+```tsx
+import React, { useEffect, useRef } from 'react'
+import { Target, useScrollTo } from '@nandorojo/anchor'
+import { useFormikContext } from 'formik'
+
+function isObject(value?: object) {
+  return value && typeof value === 'object' && value.constructor === Object
+}
+
+function getRecursiveName(object?: object): string {
+  if (!object || !isObject(object)) {
+    return ''
+  }
+  const currentKey = Object.keys(object)[0]
+  if (!currentKey) {
+    return ''
+  }
+  if (!getRecursiveName(object[currentKey])) {
+    return currentKey
+  }
+  return currentKey + '.' + getRecursiveName(object[currentKey])
+}
+
+export function ScrollToField({
+  name,
+  triggerFocus,
+}: {
+  name: string
+  triggerFocus?: () => void
+}) {
+  const { submitCount, errors } = useFormikContext()
+
+  const { scrollTo } = useScrollTo()
+  const previousSubmitCount = useRef(submitCount)
+  const errorPath = getRecursiveName(errors)
+
+  useEffect(
+    function scrollOnSubmissionError() {
+      if (!errorPath) return
+
+      if (submitCount > previousSubmitCount.current && name) {
+        if (name === errorPath) {
+          scrollTo(name).then((didScroll) =>
+            console.log('[scroll-to-field] did scroll', name, didScroll)
+          )
+        }
+      }
+      previousSubmitCount.current = submitCount
+    },
+    [errorPath, errors, name, scrollTo, submitCount]
+  )
+
+  return <Target name={name} />
 }
 ```
 
