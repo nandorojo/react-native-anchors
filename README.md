@@ -343,7 +343,8 @@ import {
   useScrollTo,
   ScrollTo,
   Target,
-  useRegisterScroller
+  useRegisterScroller,
+  useAnchors
 } from '@nandorojo/anchor'
 ```
 
@@ -447,6 +448,29 @@ export default function Provider() {
       <MyComponent />
     </AnchorProvider>
   )
+}
+```
+  
+### `useAnchors`
+  
+If you need to control a `ScrollView` or `FlatList` from outside of their scope:
+
+```jsx
+import React from 'react'
+import { useAnchors, ScrollView } from '@nandorojo/anchor'
+
+export default function App() {
+ const anchors = useAnchors()
+
+ const onPress = () => {
+   anchors.current?.scrollTo('list')
+ }
+
+ return (
+   <ScrollView anchors={anchors}>
+     <Target name="list" />
+   </ScrollView>
+ )
 }
 ```
 
