@@ -215,6 +215,8 @@ return (
 
 ## Web usage
 
+### Smooth Scrolling
+
 This works with web (react-native-web 0.15.3 or higher).
 
 To support iOS browsers, you should polyfill the smooth scroll API.
@@ -232,6 +234,73 @@ if (Platform.OS === 'web' && typeof window !== 'undefined') {
   require('smoothscroll-polyfill').polyfill()
 }
 ```
+
+### Patch
+
+`react-native-web`'s resolution for scroll position is currently wrong.
+
+Until this issue is closed (https://github.com/necolas/react-native-web/issues/2109), I'll be using this patch with `patch-package`:
+
+<details>
+<summary>
+Click me to view patch
+</summary>
+
+```diff
+diff --git a/node_modules/@nandorojo/anchor/lib/module/index.js b/node_modules/@nandorojo/anchor/lib/module/index.js
+index 6decdc0..d27b884 100644
+--- a/node_modules/@nandorojo/anchor/lib/module/index.js
++++ b/node_modules/@nandorojo/anchor/lib/module/index.js
+@@ -1,7 +1,7 @@
+ function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+ 
+ import * as React from 'react';
+-import { View, ScrollView as NativeScrollView, FlatList as NativeFlatList, findNodeHandle, Pressable } from 'react-native';
++import { View, ScrollView as NativeScrollView, FlatList as NativeFlatList, findNodeHandle, Pressable, Platform } from 'react-native';
+ const {
+   createContext,
+   forwardRef,
+@@ -130,7 +130,10 @@ const useCreateAnchorsContext = ({
+         return new Promise(resolve => {
+           var _targetRefs$current, _targetRefs$current2;
+ 
+-          const node = scrollRef.current && findNodeHandle(scrollRef.current);
++          const node = Platform.select({
++            default: scrollRef.current,
++            web: scrollRef.current && scrollRef.current.getInnerViewNode  && scrollRef.current.getInnerViewNode()
++          })
+ 
+           if (!node) {
+             return resolve({
+diff --git a/node_modules/@nandorojo/anchor/src/index.js b/node_modules/@nandorojo/anchor/src/index.js
+index 7259856..80fc63c 100644
+--- a/node_modules/@nandorojo/anchor/src/index.js
++++ b/node_modules/@nandorojo/anchor/src/index.js
+@@ -1,5 +1,5 @@
+ import * as React from 'react';
+-import { View, ScrollView as NativeScrollView, FlatList as NativeFlatList, findNodeHandle, Pressable, } from 'react-native';
++import { View, ScrollView as NativeScrollView, FlatList as NativeFlatList, findNodeHandle, Pressable, Platform } from 'react-native';
+ const { createContext, forwardRef, useContext, useMemo, useRef, useImperativeHandle, } = React;
+ // from react-merge-refs (avoid dependency)
+ function mergeRefs(refs) {
+@@ -109,7 +109,11 @@ const useCreateAnchorsContext = ({ horizontal, }) => {
+             horizontal,
+             scrollTo: (name, { animated = true, offset = -10 } = {}) => {
+                 return new Promise((resolve) => {
+-                    const node = scrollRef.current && findNodeHandle(scrollRef.current);
++                    const node = Platform.select({
++                      default: scrollRef.current,
++                      web: scrollRef.current && scrollRef.current.getInnerViewRef()
++                    })
++                    // const node = scrollRef.current && findNodeHandle(scrollRef.current);
+                     if (!node) {
+                         return resolve({
+                             success: false,
+
+```
+</details>
+
+### Gotchas
 
 One thing to keep in mind: the parent view of a `ScrollView` on web **must** have a fixed height. Otherwise, the `ScrollView` will just use window scrolling. This is a common source of confusion on web, and it took me a while to learn.
 
