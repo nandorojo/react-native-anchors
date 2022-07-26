@@ -1,10 +1,8 @@
 # React Native Anchor 🦅
 
-Anchor links and scroll-to utilities for React Native (+ Web)
+Anchor links and scroll-to utilities for React Native (+ Web). It has zero dependencies.
 
 ## Installation
-
-> Coming soon 😇
 
 ```sh
 yarn add @nandorojo/anchor
@@ -12,14 +10,16 @@ yarn add @nandorojo/anchor
 
 If you're using react-native-web, you'll need at least version 0.15.3.
 
+This works great to scroll to errors in Formik forms. See the [`ScrollToField` component](#formik-error-usage).
+
 ## Usage
 
 This is the simplest usage:
 
 ```jsx
-import React from 'react';
-import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor';
-import { View, Text } from 'react-native';
+import React from 'react'
+import { ScrollTo, Target, ScrollView } from '@nandorojo/anchor'
+import { View, Text } from 'react-native'
 
 export default function App() {
   return (
@@ -34,12 +34,12 @@ export default function App() {
         </Target>
       </ScrollView>
     </View>
-  );
+  )
 }
 ```
 
 - [Expo Snack example](https://snack.expo.io/@nandorojo/anxious-chip) (iOS and Android only, since Expo Snack uses an outdated react-native-web version)
-- [CodeSandbox example](https://codesandbox.io/s/empty-sky-8nhnb?file=/src/App.js) (web) 
+- [CodeSandbox example](https://codesandbox.io/s/empty-sky-8nhnb?file=/src/App.js) (web)
 
 The library exports a `ScrollView` and `FlatList` component you can use as drop-in replacements for the react-native ones.
 
@@ -215,6 +215,8 @@ return (
 
 ## Web usage
 
+### Smooth Scrolling
+
 This works with web (react-native-web 0.15.3 or higher).
 
 To support iOS browsers, you should polyfill the smooth scroll API.
@@ -232,6 +234,73 @@ if (Platform.OS === 'web' && typeof window !== 'undefined') {
   require('smoothscroll-polyfill').polyfill()
 }
 ```
+
+### Patch
+
+`react-native-web`'s resolution for scroll position is currently wrong.
+
+Until this issue is closed (https://github.com/necolas/react-native-web/issues/2109), I'll be using this patch with `patch-package`:
+
+<details>
+<summary>
+Click me to view patch
+</summary>
+
+```diff
+diff --git a/node_modules/@nandorojo/anchor/lib/module/index.js b/node_modules/@nandorojo/anchor/lib/module/index.js
+index 6decdc0..d27b884 100644
+--- a/node_modules/@nandorojo/anchor/lib/module/index.js
++++ b/node_modules/@nandorojo/anchor/lib/module/index.js
+@@ -1,7 +1,7 @@
+ function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+ 
+ import * as React from 'react';
+-import { View, ScrollView as NativeScrollView, FlatList as NativeFlatList, findNodeHandle, Pressable } from 'react-native';
++import { View, ScrollView as NativeScrollView, FlatList as NativeFlatList, findNodeHandle, Pressable, Platform } from 'react-native';
+ const {
+   createContext,
+   forwardRef,
+@@ -130,7 +130,10 @@ const useCreateAnchorsContext = ({
+         return new Promise(resolve => {
+           var _targetRefs$current, _targetRefs$current2;
+ 
+-          const node = scrollRef.current && findNodeHandle(scrollRef.current);
++          const node = Platform.select({
++            default: scrollRef.current,
++            web: scrollRef.current && scrollRef.current.getInnerViewNode  && scrollRef.current.getInnerViewNode()
++          })
+ 
+           if (!node) {
+             return resolve({
+diff --git a/node_modules/@nandorojo/anchor/src/index.js b/node_modules/@nandorojo/anchor/src/index.js
+index 7259856..80fc63c 100644
+--- a/node_modules/@nandorojo/anchor/src/index.js
++++ b/node_modules/@nandorojo/anchor/src/index.js
+@@ -1,5 +1,5 @@
+ import * as React from 'react';
+-import { View, ScrollView as NativeScrollView, FlatList as NativeFlatList, findNodeHandle, Pressable, } from 'react-native';
++import { View, ScrollView as NativeScrollView, FlatList as NativeFlatList, findNodeHandle, Pressable, Platform } from 'react-native';
+ const { createContext, forwardRef, useContext, useMemo, useRef, useImperativeHandle, } = React;
+ // from react-merge-refs (avoid dependency)
+ function mergeRefs(refs) {
+@@ -109,7 +109,11 @@ const useCreateAnchorsContext = ({ horizontal, }) => {
+             horizontal,
+             scrollTo: (name, { animated = true, offset = -10 } = {}) => {
+                 return new Promise((resolve) => {
+-                    const node = scrollRef.current && findNodeHandle(scrollRef.current);
++                    const node = Platform.select({
++                      default: scrollRef.current,
++                      web: scrollRef.current && scrollRef.current.getInnerViewRef()
++                    })
++                    // const node = scrollRef.current && findNodeHandle(scrollRef.current);
+                     if (!node) {
+                         return resolve({
+                             success: false,
+
+```
+</details>
+
+### Gotchas
 
 One thing to keep in mind: the parent view of a `ScrollView` on web **must** have a fixed height. Otherwise, the `ScrollView` will just use window scrolling. This is a common source of confusion on web, and it took me a while to learn.
 
@@ -274,7 +343,8 @@ import {
   useScrollTo,
   ScrollTo,
   Target,
-  useRegisterScroller
+  useRegisterScroller,
+  useAnchors
 } from '@nandorojo/anchor'
 ```
 
@@ -317,7 +387,7 @@ A react hook that returns a `scrollTo(name, options?)` function. This serves as 
 The first argument is required. It's a string that corresponds to your target's unique `name` prop.
 
 The second argument is an optional `options` object, which is identical to the [`ScrollTo`](#ScrollTo) component's `options` prop.
- 
+
 ```jsx
 import { ScrollView, Target } from '@nandorojo/anchor'
 import { Text, View } from 'react-native'
@@ -348,7 +418,7 @@ export default function App() {
       </Target>
     </ScrollView>
   )
-} 
+}
 ```
 
 ### `useRegisterScroller`
@@ -356,7 +426,6 @@ export default function App() {
 A hook that returns a `register` function. This is an alternative option to using the `ScrollView` or `FlatList` components provided by this library.
 
 Note that, to use this, you must first wrap the scrollable with `AnchorProvider`. It's probably easier to just use the exported `ScrollView`, but it's your call.
-
 
 ```tsx
 import { AnchorProvider, useRegisterScrollable } from '@nandorojo/anchor'
@@ -378,6 +447,96 @@ export default function Provider() {
     <AnchorProvider>
       <MyComponent />
     </AnchorProvider>
+  )
+}
+```
+  
+### `useAnchors`
+  
+If you need to control a `ScrollView` or `FlatList` from outside of their scope:
+
+```jsx
+import React from 'react'
+import { useAnchors, ScrollView } from '@nandorojo/anchor'
+
+export default function App() {
+ const anchors = useAnchors()
+
+ const onPress = () => {
+   anchors.current?.scrollTo('list')
+ }
+
+ return (
+   <ScrollView anchors={anchors}>
+     <Target name="list" />
+   </ScrollView>
+ )
+}
+```
+
+## Formik Error Usage
+
+1. Create a `ScrollToField` component:
+
+```tsx
+import React, { useEffect, useRef } from 'react'
+import { Target, useScrollTo } from '@nandorojo/anchor'
+import { useFormikContext } from 'formik'
+
+function isObject(value?: object) {
+  return value && typeof value === 'object' && value.constructor === Object
+}
+
+function getRecursiveName(object?: object): string {
+  if (!object || !isObject(object)) {
+    return ''
+  }
+  const currentKey = Object.keys(object)[0]
+  if (!currentKey) {
+    return ''
+  }
+  if (!getRecursiveName(object[currentKey])) {
+    return currentKey
+  }
+  return currentKey + '.' + getRecursiveName(object[currentKey])
+}
+
+export function ScrollToField({ name }: { name: string }) {
+  const { submitCount, errors } = useFormikContext()
+
+  const { scrollTo } = useScrollTo()
+  const previousSubmitCount = useRef(submitCount)
+  const errorPath = getRecursiveName(errors)
+
+  useEffect(
+    function scrollOnSubmissionError() {
+      if (!errorPath) return
+
+      if (submitCount > previousSubmitCount.current && name) {
+        if (name === errorPath) {
+          scrollTo(name).then((didScroll) => console.log('[scroll-to-field] did scroll', name, didScroll))
+        }
+      }
+      previousSubmitCount.current = submitCount
+    },
+    [errorPath, errors, name, scrollTo, submitCount]
+  )
+
+  return <Target name={name} />
+}
+```
+
+2. Add it alongside your field:
+
+```tsx
+const InputField = ({ name }) => {
+  const [{ value }] = useField(name)
+
+  return (
+    <View>
+      <ScrollToField name={name} />
+      <TextInput value={value} />
+    </View>
   )
 }
 ```
