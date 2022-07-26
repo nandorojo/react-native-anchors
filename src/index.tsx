@@ -244,6 +244,13 @@ const useCreateAnchorsContext = ({
                 scrollTo = Math.max(scrollTo, 0);
                 const key = horizontal ? 'x' : 'y';
 
+                if (!scrollable) {
+                  return resolve({
+                    success: false,
+                    message: 'Scrollable not detected. Will not scroll.',
+                  });
+                }
+
                 if ('scrollTo' in scrollable) {
                   scrollable.scrollTo({
                     [key]: scrollTo,
@@ -488,6 +495,8 @@ const Target = forwardRef<
   return <View {...props} ref={mergeRefs([register(name), ref])} />;
 });
 
+const AnchorsConsumer = AnchorsContext.Consumer;
+
 export {
   AnchorProvider,
   ScrollView,
@@ -499,5 +508,6 @@ export {
   ScrollTo as Anchor,
   useRegisterScroller,
   useAnchors,
+  AnchorsConsumer,
 };
 // }
