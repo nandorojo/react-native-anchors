@@ -5,8 +5,8 @@ import {
   ScrollView as NativeScrollView,
   FlatList as NativeFlatList,
   FlatListProps,
-  findNodeHandle,
   Pressable,
+  Platform,
 } from 'react-native';
 import type {
   ComponentProps,
@@ -217,8 +217,15 @@ const useCreateAnchorsContext = ({
           { success: true } | { success: false; message: string }
         >((resolve) => {
           try {
-            const node =
-              scrollRef.current && findNodeHandle(scrollRef.current as any);
+            const node = Platform.select({
+              default: scrollRef.current,
+              web:
+                scrollRef.current &&
+                // @ts-ignore
+                scrollRef.current.getInnerViewNode &&
+                // @ts-ignore
+                scrollRef.current.getInnerViewNode(),
+            });
             if (!node) {
               return resolve({
                 success: false,
