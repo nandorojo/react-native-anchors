@@ -68,6 +68,10 @@ function getScrollableNode(ref: RefObject<ScrollableWrapper>) {
     return null;
   }
 
+  if (typeof ref.current !== 'object' && typeof ref.current !== 'function') {
+    return null;
+  }
+
   if (
     'scrollTo' in ref.current ||
     'scrollToOffset' in ref.current ||
@@ -212,71 +216,90 @@ const useCreateAnchorsContext = ({
         return new Promise<
           { success: true } | { success: false; message: string }
         >((resolve) => {
-          const node =
-            scrollRef.current && findNodeHandle(scrollRef.current as any);
-          if (!node) {
-            return resolve({
-              success: false,
-              message: 'Scroll ref does not exist. Will not scroll to view.',
-            });
-          }
-          if (!targetRefs.current?.[name]) {
-            resolve({
-              success: false,
-              message:
-                'Anchor ref ' +
-                name +
-                ' does not exist. It will not scroll. Please make sure to use the ScrollView provided by @nandorojo/anchors, or use the registerScrollRef function for your own ScrollView.',
-            });
-          }
-          targetRefs.current?.[name].measureLayout(
-            node,
-            (left, top) => {
-              requestAnimationFrame(() => {
-                const scrollY = top;
-                const scrollX = left;
-                const scrollable = getScrollableNode(
-                  scrollRef as RefObject<ScrollableWrapper>
-                ) as ScrollableWrapper;
-
-                let scrollTo = horizontal ? scrollX : scrollY;
-                scrollTo += offset;
-                scrollTo = Math.max(scrollTo, 0);
-                const key = horizontal ? 'x' : 'y';
-
-                if (!scrollable) {
-                  return resolve({
-                    success: false,
-                    message: 'Scrollable not detected. Will not scroll.',
-                  });
-                }
-
-                if ('scrollTo' in scrollable) {
-                  scrollable.scrollTo({
-                    [key]: scrollTo,
-                    animated,
-                  });
-                } else if ('scrollToOffset' in scrollable) {
-                  scrollable.scrollToOffset({
-                    offset: scrollTo,
-                    animated,
-                  });
-                } else if ('scrollResponderScrollTo' in scrollable) {
-                  scrollable.scrollResponderScrollTo({
-                    [key]: scrollTo,
-                    animated,
-                  });
-                }
-                resolve({ success: true });
-              });
-            },
-            () => {
-              resolve({
+          try {
+            const node =
+              scrollRef.current && findNodeHandle(scrollRef.current as any);
+            if (!node) {
+              return resolve({
                 success: false,
-                message: 'Failed to measure target node.',
+                message: 'Scroll ref does not exist. Will not scroll to view.',
               });
             }
-          );
+            if (!targetRefs.current?.[name]) {
+              resolve({
+                success: false,
+                message:
+                  'Anchor ref ' +
+                  name +
+                  ' does not exist. It will not scroll. Please make sure to use the ScrollView provided by @nandorojo/anchors, or use the registerScrollRef function for your own ScrollView.',
+              });
+            }
+            targetRefs.current?.[name].measureLayout(
+              node,
+              (left, top) => {
+                requestAnimationFrame(() => {
+                  const scrollY = top;
+                  const scrollX = left;
+                  const scrollable = getScrollableNode(
+                    scrollRef as RefObject<ScrollableWrapper>
+                  ) as ScrollableWrapper;
+
+                  let scrollTo = horizontal ? scrollX : scrollY;
+                  scrollTo += offset;
+                  scrollTo = Math.max(scrollTo, 0);
+                  const key = horizontal ? 'x' : 'y';
+
+                  if (!scrollable) {
+                    return resolve({
+                      success: false,
+                      message: 'Scrollable not detected. Will not scroll.',
+                    });
+                  }
+
+                  try {
+                    if ('scrollTo' in scrollable) {
+                      scrollable.scrollTo({
+                        [key]: scrollTo,
+                        animated,
+                      });
+                    } else if ('scrollToOffset' in scrollable) {
+                      scrollable.scrollToOffset({
+                        offset: scrollTo,
+                        animated,
+                      });
+                    } else if ('scrollResponderScrollTo' in scrollable) {
+                      scrollable.scrollResponderScrollTo({
+                        [key]: scrollTo,
+                        animated,
+                      });
+                    }
+                  } catch (error) {
+                    return resolve({
+                      success: false,
+                      message: 'Failed to scroll for an unknown reason.',
+                    });
+                  }
+                  resolve({ success: true });
+                });
+              },
+              () => {
+                resolve({
+                  success: false,
+                  message: 'Failed to measure target node.',
+                });
+              }
+            );
+          } catch (error: any) {
+            resolve({
+              success: false,
+              message: [
+                'Failed to measure target node.',
+                error && 'message' in error && error.message,
+              ]
+                .filter(Boolean)
+                .join(' '),
+            });
+          }
         });
       },
     };
@@ -302,73 +325,6 @@ function useScrollTo() {
   return useMemo(
     () => ({
       scrollTo,
-      // scrollTo: (
-      //   name: Anchor,
-      //   { animated = true, offset = -10 }: ScrollToOptions = {}
-      // ) => {
-      //   return new Promise<
-      //     { success: true } | { success: false; message: string }
-      //   >((resolve) => {
-      //     const node =
-      //       scrollRef.current && findNodeHandle(scrollRef.current as any);
-      //     if (!node) {
-      //       return resolve({
-      //         success: false,
-      //         message: 'Scroll ref does not exist. Will not scroll to view.',
-      //       });
-      //     }
-      //     if (!targetRefs.current?.[name]) {
-      //       resolve({
-      //         success: false,
-      //         message:
-      //           'Anchor ref ' +
-      //           name +
-      //           ' does not exist. It will not scroll. Please make sure to use the ScrollView provided by @nandorojo/anchors, or use the registerScrollRef function for your own ScrollView.',
-      //       });
-      //     }
-      //     targetRefs.current?.[name].measureLayout(
-      //       node,
-      //       (left, top) => {
-      //         requestAnimationFrame(() => {
-      //           const scrollY = top;
-      //           const scrollX = left;
-      //           const scrollable = getScrollableNode(
-      //             scrollRef
-      //           ) as ScrollableWrapper;
-
-      //           let scrollTo = horizontal ? scrollX : scrollY;
-      //           scrollTo += offset;
-      //           scrollTo = Math.max(scrollTo, 0);
-      //           const key = horizontal ? 'x' : 'y';
-
-      //           if ('scrollTo' in scrollable) {
-      //             scrollable.scrollTo({
-      //               [key]: scrollTo,
-      //               animated,
-      //             });
-      //           } else if ('scrollToOffset' in scrollable) {
-      //             scrollable.scrollToOffset({
-      //               offset: scrollTo,
-      //               animated,
-      //             });
-      //           } else if ('scrollResponderScrollTo' in scrollable) {
-      //             scrollable.scrollResponderScrollTo({
-      //               [key]: scrollTo,
-      //               animated,
-      //             });
-      //           }
-      //           resolve({ success: true });
-      //         });
-      //       },
-      //       () => {
-      //         resolve({
-      //           success: false,
-      //           message: 'Failed to measure target node.',
-      //         });
-      //       }
-      //     );
-      //   });
-      // },
     }),
     [scrollTo]
   );
